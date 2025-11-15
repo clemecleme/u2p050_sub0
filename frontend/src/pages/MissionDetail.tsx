@@ -12,6 +12,15 @@ const MissionDetail = () => {
   
   const [mission, setMission] = useState<Mission | null>(null)
   const [loading, setLoading] = useState(true)
+  const [simulatedRegistration, setSimulatedRegistration] = useState(false)
+
+  useEffect(() => {
+    // Check if simulated registration exists in localStorage
+    const simulated = localStorage.getItem(`simulated-registration-${id}`)
+    if (simulated === 'true') {
+      setSimulatedRegistration(true)
+    }
+  }, [id])
 
   useEffect(() => {
     if (!user) {
@@ -31,7 +40,7 @@ const MissionDetail = () => {
     setLoading(false)
   }, [id, user, navigate])
 
-  const isRegistered = user?.registeredMissions?.includes(id || '') || false
+  const isRegistered = user?.registeredMissions?.includes(id || '') || simulatedRegistration
 
   const handleRegister = () => {
     if (!user || !id) return
@@ -52,7 +61,28 @@ const MissionDetail = () => {
     )
   }
 
-  const canAccess = mission.status === 'active' && isRegistered
+  const canAccess = (mission.status === 'active' && isRegistered) || simulatedRegistration
+
+  // Mock data for active missions
+  const mockActiveInvestigators = 42
+  const mockSubmittedSolutions = 17
+
+  // Calculate time left for active missions
+  const getTimeLeftToEnd = () => {
+    if (mission.status !== 'active') return ''
+    
+    const now = new Date().getTime()
+    const end = new Date(mission.endTime).getTime()
+    const diff = end - now
+
+    if (diff <= 0) return '00:00:00'
+
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  }
 
   return (
     <div className="landing-page">
@@ -81,7 +111,7 @@ const MissionDetail = () => {
           {/* Mission Status Badge */}
           <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h1 style={{ 
-              fontSize: '2.5rem', 
+              fontSize: '3rem', 
               color: '#fff', 
               fontWeight: 'bold',
               margin: 0,
@@ -177,9 +207,116 @@ const MissionDetail = () => {
 
           {/* Timer */}
           {mission.status === 'active' && (
-            <div style={{ marginBottom: '2rem' }}>
-              <Timer targetDate={mission.endTime} label="Time Remaining" />
-            </div>
+            <>
+              {/* Time left countdown */}
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{
+                  fontSize: '0.65rem',
+                  color: '#00ff41',
+                  marginBottom: '0.5rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span>Investigation Ends In</span>
+                  <span style={{ fontWeight: 'bold', color: '#00ff41' }}>{getTimeLeftToEnd()}</span>
+                </div>
+                <div style={{
+                  position: 'relative',
+                  height: '6px',
+                  background: '#0a0a0a',
+                  border: '1px solid #00ff41',
+                  overflow: 'hidden'
+                }}>
+                  {/* Background glitch lines */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '100%',
+                    height: '100%',
+                    background: 'repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 255, 65, 0.1) 2px, rgba(0, 255, 65, 0.1) 4px)',
+                    animation: 'glitchMove 0.3s linear infinite'
+                  }} />
+                  {/* Progress bar */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '75%', // Placeholder for dynamic progress
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #00ff41, #00ff41)',
+                    boxShadow: `0 0 10px rgba(0, 255, 65, 0.5)`,
+                    transition: 'width 1s linear'
+                  }} />
+                  {/* Scanning line */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '2px',
+                    height: '100%',
+                    background: '#fff',
+                    boxShadow: '0 0 5px #fff',
+                    animation: 'scan 2s linear infinite'
+                  }} />
+                </div>
+              </div>
+
+              {/* Mission stats */}
+              <div style={{
+                marginBottom: '2rem',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '1rem'
+              }}>
+                <div style={{
+                  padding: '1rem',
+                  background: 'rgba(90, 127, 163, 0.1)',
+                  border: '1px solid #5a7fa3'
+                }}>
+                  <div style={{
+                    fontSize: '0.6rem',
+                    color: '#5a7fa3',
+                    marginBottom: '0.5rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    lineHeight: '1.3'
+                  }}>
+                    People Currently Investigating
+                  </div>
+                  <div style={{
+                    fontSize: '2rem',
+                    color: '#5a7fa3',
+                    fontWeight: 'bold',
+                    fontFamily: 'VT323, monospace'
+                  }}>
+                    {mockActiveInvestigators}
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '1rem',
+                  background: 'rgba(90, 127, 163, 0.1)',
+                  border: '1px solid #5a7fa3'
+                }}>
+                  <div style={{
+                    fontSize: '0.6rem',
+                    color: '#5a7fa3',
+                    marginBottom: '0.5rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    lineHeight: '1.3'
+                  }}>
+                    Answers Already Submitted
+                  </div>
+                  <div style={{
+                    fontSize: '2rem',
+                    color: '#5a7fa3',
+                    fontWeight: 'bold',
+                    fontFamily: 'VT323, monospace'
+                  }}>
+                    {mockSubmittedSolutions}
+                  </div>
+                </div>
+              </div>
+            </>
           )}
 
           {mission.status === 'upcoming' && (
@@ -225,10 +362,13 @@ const MissionDetail = () => {
                     width: '100%',
                     textDecoration: 'none',
                     display: 'block',
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    padding: '1rem'
                   }}
                 >
-                  🔍 Enter the Mission Board
+                  ENTER THE MISSION BOARD
                 </Link>
                 <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#808080' }}>
                   Access the investigation board to analyze evidence

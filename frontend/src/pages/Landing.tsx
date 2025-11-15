@@ -1,29 +1,8 @@
-import { useNavigate } from 'react-router-dom'
-import { useApp } from '../contexts/AppContext'
 import WalletConnect from '../components/wallet/WalletConnect'
 
 const Landing = () => {
-  const { user, setUser } = useApp()
-  const navigate = useNavigate()
-
-  const handleDemoMode = () => {
-    setUser({
-      address: '0xDemoUserAddress1234567890abcdef',
-      registeredMissions: ['mission-1', 'mission-4'],
-    })
-    navigate('/missions')
-  }
-
   return (
     <div className="landing-page">
-      {/* Demo Mode button - top right */}
-      <button
-        onClick={handleDemoMode}
-        className="demo-mode-floating"
-      >
-        Demo Mode
-      </button>
-
       {/* Single central node */}
       <div className="landing-window landing-window-center">
         <div className="node-header">
@@ -41,7 +20,7 @@ const Landing = () => {
           
           {/* Wallet connection */}
           <div style={{ marginTop: '2rem' }}>
-            <WalletConnect hideDemoMode={true} />
+            <WalletConnect />
           </div>
         </div>
       </div>

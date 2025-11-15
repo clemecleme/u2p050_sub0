@@ -19,7 +19,6 @@ import '@xyflow/react/dist/style.css'
 import { useApp } from '../contexts/AppContext'
 import DocumentNode from '../components/board/DocumentNode'
 import DocumentOverlay from '../components/board/DocumentOverlay'
-import DocumentSidebar from '../components/board/DocumentSidebar'
 import AnswerSubmission from '../components/board/AnswerSubmission'
 import SagEdge from '../components/board/SagEdge'
 import SagConnectionLine from '../components/board/SagConnectionLine'
@@ -80,7 +79,10 @@ const BoardPage = () => {
     const isActive = missionData.status === 'active'
     const isRegistered = user.registeredMissions?.includes(id)
     
-    if (isActive && !isRegistered) {
+    // Check simulated registration from localStorage
+    const simulatedRegistration = localStorage.getItem(`simulated-registration-${id}`) === 'true'
+    
+    if (isActive && !isRegistered && !simulatedRegistration) {
       setAccessDenied(true)
       return
     }
@@ -90,65 +92,31 @@ const BoardPage = () => {
     // Load documents
     const docs = getDocumentsForMission(id)
     setDocuments(docs)
-  }, [id, user, navigate])
 
-  // Handle drag start from sidebar
-  const onDragStart = (event: React.DragEvent, document: Document) => {
-    if (!document || document.state === 'onBoard') return
-    
-    event.dataTransfer.setData('application/reactflow', JSON.stringify(document))
-    event.dataTransfer.effectAllowed = 'move'
-  }
-
-  // Handle drop on board
-  const onDrop = useCallback(
-    (event: React.DragEvent) => {
-      event.preventDefault()
-
-      if (!reactFlowInstance) return
-
-      const documentData = event.dataTransfer.getData('application/reactflow')
-      if (!documentData) return
-
-      try {
-        const document: Document = JSON.parse(documentData)
-
-        // Convert screen coordinates to flow coordinates
-        const position = reactFlowInstance.screenToFlowPosition({
-          x: event.clientX,
-          y: event.clientY,
-        })
-
-        // Create new node
-        const newNode: Node = {
-          id: `node-${document.id}-${Date.now()}`,
-          type: document.type,
-          position,
-          data: {
-            title: document.name,
-            content: document.content,
-          },
-        }
-
-        setNodes((nds) => nds.concat(newNode))
-
-        // Update document state
-        setDocuments((docs) =>
-          docs.map((d) =>
-            d.id === document.id ? { ...d, state: 'onBoard' as const } : d
-          )
-        )
-      } catch (error) {
-        console.error('Error dropping document:', error)
+    // Automatically place all documents on the board with random positions
+    const initialNodes: Node[] = docs.map((doc, index) => {
+      // Create a grid-like layout with some randomness
+      const gridSize = Math.ceil(Math.sqrt(docs.length))
+      const row = Math.floor(index / gridSize)
+      const col = index % gridSize
+      
+      // Add randomness to positions
+      const baseX = col * 400 + Math.random() * 100
+      const baseY = row * 300 + Math.random() * 100
+      
+      return {
+        id: `node-${doc.id}`,
+        type: doc.type,
+        position: { x: baseX, y: baseY },
+        data: {
+          title: doc.name,
+          content: doc.content,
+        },
       }
-    },
-    [reactFlowInstance, setNodes]
-  )
+    })
 
-  const onDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'move'
-  }, [])
+    setNodes(initialNodes)
+  }, [id, user, navigate, setNodes])
 
   // Handle node double click to open overlay
   const onNodeDoubleClick = useCallback((_event: React.MouseEvent, node: Node) => {
@@ -211,68 +179,52 @@ const BoardPage = () => {
   }
 
   return (
-    <div className="h-screen bg-dark-950 flex board-page">
-      {/* Document Sidebar */}
-      <DocumentSidebar documents={documents} onDragStart={onDragStart} />
-
-      {/* Board Column */}
-      <div className="flex-1 flex flex-col">
-        {/* Board Header */}
-        <div className="board-header">
-          <div className="board-header-left">
-            <h1 className="board-title">{mission.title}</h1>
-            {mission.mainQuestion && (
-              <p className="board-question">{mission.mainQuestion}</p>
-            )}
-          </div>
-
-          <button className="btn-primary" onClick={() => setShowSubmissionOverlay(true)}>
-            Submit Answer
-          </button>
-        </div>
-
-        {/* React Flow Board */}
-        <div ref={reactFlowWrapper} className="flex-1 relative" onDrop={onDrop} onDragOver={onDragOver}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onNodeDoubleClick={onNodeDoubleClick}
-            onConnect={onConnect}
-            onEdgeContextMenu={onEdgeContextMenu}
-            onInit={setReactFlowInstance}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            connectionLineComponent={SagConnectionLine}
-            fitView
-            deleteKeyCode={null}
-            connectionMode="loose"
-            minZoom={0.1}
-            maxZoom={2}
-          >
-            <Background color="#374151" gap={16} />
-            <Controls />
-            <MiniMap 
-              style={{ 
-                width: '120px', 
-                height: '80px' 
-              }}
-              nodeColor="var(--board-accent)"
-              maskColor="rgba(0, 0, 0, 0.6)"
-            />
-          </ReactFlow>
-
-          {/* Empty board message */}
-          {nodes.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 5 }}>
-              <div className="text-center max-w-md text-gray-400">
-                <div className="text-sm mb-1">Drag documents from the sidebar to start investigating</div>
-                <div className="text-xs">Double-click nodes to view details • Right-click edges to delete</div>
-              </div>
-            </div>
+    <div className="h-screen bg-dark-950 flex flex-col board-page">
+      {/* Board Header */}
+      <div className="board-header">
+        <div className="board-header-left">
+          <h1 className="board-title">{mission.title}</h1>
+          {mission.mainQuestion && (
+            <p className="board-question">{mission.mainQuestion}</p>
           )}
         </div>
+
+        <button className="btn-primary" onClick={() => setShowSubmissionOverlay(true)}>
+          Submit Answer
+        </button>
+      </div>
+
+      {/* React Flow Board */}
+      <div ref={reactFlowWrapper} className="flex-1 relative">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onNodeDoubleClick={onNodeDoubleClick}
+          onConnect={onConnect}
+          onEdgeContextMenu={onEdgeContextMenu}
+          onInit={setReactFlowInstance}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          connectionLineComponent={SagConnectionLine}
+          fitView
+          deleteKeyCode={null}
+          connectionMode="loose"
+          minZoom={0.1}
+          maxZoom={2}
+        >
+          <Background color="#374151" gap={16} />
+          <Controls />
+          <MiniMap 
+            style={{ 
+              width: '120px', 
+              height: '80px' 
+            }}
+            nodeColor="var(--board-accent)"
+            maskColor="rgba(0, 0, 0, 0.6)"
+          />
+        </ReactFlow>
       </div>
 
       {/* Document Overlay */}

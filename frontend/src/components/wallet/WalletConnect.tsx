@@ -4,11 +4,7 @@ import { BrowserProvider } from 'ethers'
 import { useApp } from '../../contexts/AppContext'
 import { setAuthToken } from '../../services/api'
 
-interface WalletConnectProps {
-  hideDemoMode?: boolean;
-}
-
-const WalletConnect = ({ hideDemoMode = false }: WalletConnectProps) => {
+const WalletConnect = () => {
   const { user, setUser } = useApp()
   const navigate = useNavigate()
   const [isConnecting, setIsConnecting] = useState(false)
@@ -43,6 +39,13 @@ const WalletConnect = ({ hideDemoMode = false }: WalletConnectProps) => {
       const address = accounts[0]
       setAuthToken(address)
       
+      // Clear any simulated registrations from localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('simulated-registration-')) {
+          localStorage.removeItem(key)
+        }
+      })
+      
       setUser({
         address,
         registeredMissions: [],
@@ -60,15 +63,6 @@ const WalletConnect = ({ hideDemoMode = false }: WalletConnectProps) => {
     } finally {
       setIsConnecting(false)
     }
-  }
-
-  const useDemoMode = () => {
-    setUser({
-      address: 'demo-user-0x123456789',
-      registeredMissions: ['mission-4'], // Pre-registered to mission-4
-    })
-    // Navigate to missions after demo mode
-    navigate('/missions')
   }
 
   const disconnectWallet = () => {
@@ -122,17 +116,6 @@ const WalletConnect = ({ hideDemoMode = false }: WalletConnectProps) => {
             Install MetaMask
           </a>
         )}
-
-        {/* Demo Mode Button - conditionally rendered */}
-        {!hideDemoMode && (
-          <button
-            onClick={useDemoMode}
-            className="btn-secondary text-xs px-3 py-1"
-            style={{ fontSize: '0.7rem' }}
-          >
-            Demo Mode
-          </button>
-        )}
       </div>
       
       {error && (
@@ -142,7 +125,7 @@ const WalletConnect = ({ hideDemoMode = false }: WalletConnectProps) => {
       )}
       
       <p className="text-gray-400 text-sm mt-4">
-        Connect your wallet or use demo mode to explore
+        Connect your wallet to access missions
       </p>
     </div>
   )

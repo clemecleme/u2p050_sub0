@@ -10,7 +10,7 @@ export const mockMissions: Mission[] = [
     startTime: '2024-11-15T10:00:00Z',
     endTime: '2025-12-17T10:00:00Z',
     status: 'active',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=320&h=180&fit=crop',
+    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=600&fit=crop',
   },
   {
     id: 'mission-2',
@@ -31,16 +31,6 @@ export const mockMissions: Mission[] = [
     endTime: '2024-11-12T09:00:00Z',
     status: 'ended',
     image: 'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=320&h=180&fit=crop',
-  },
-  {
-    id: 'mission-4',
-    title: 'The Digital Phantom',
-    description: 'Track down a mysterious hacker who left digital breadcrumbs.',
-    mainQuestion: 'Who is the Digital Phantom?',
-    startTime: '2024-11-14T12:00:00Z',
-    endTime: '2025-12-20T12:00:00Z',
-    status: 'active',
-    image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=320&h=180&fit=crop',
   },
 ]
 

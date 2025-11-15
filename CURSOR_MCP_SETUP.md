@@ -74,3 +74,6 @@ Once configured, you can use the Penpot MCP server through Cursor's AI assistant
 
 
 
+
+
+

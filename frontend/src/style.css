@@ -1856,9 +1856,11 @@ nav a.active {
 @keyframes pulse-glow {
   0%, 100% { 
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+    opacity: 1;
   }
   50% { 
     box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    opacity: 0.3;
   }
 }
 
@@ -2178,6 +2180,26 @@ nav a.active {
   }
   100% {
     background-position: 0 100vh;
+  }
+}
+
+/* Glitch animation for progress bar */
+@keyframes glitchMove {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(4px);
+  }
+}
+
+/* Scanning line animation */
+@keyframes scan {
+  0% {
+    left: 0%;
+  }
+  100% {
+    left: 100%;
   }
 }
 
