@@ -1,12 +1,12 @@
+![Landing Page](frontend/public/images/landing-page.png)
+
 # 48_REDACTED
 
 A blockchain-based investigation game where players solve mysteries by analyzing evidence documents stored on Arxiv.
 
-![Landing Page](frontend/public/images/landing-page.png)
-
 ## Overview
 
-**48_REDACTED** is a detective game built for the Polkadot Sub0 Hackathon 2024. Players connect their wallet, register for time-limited investigation missions, explore evidence documents on an interactive board, and submit encrypted answers to solve conspiracies.
+**48_REDACTED** is a detective game built for the Polkadot Sub0 Hackathon 2025. Players connect their wallet, register for time-limited investigation missions, explore evidence documents on an interactive board, and submit encrypted answers to solve conspiracies.
 
 ## Tech Stack
 
@@ -139,4 +139,4 @@ MIT
 
 ---
 
-**Built for Polkadot Sub0 Hackathon 2024**
+**Built for Polkadot Sub0 Hackathon 2025**
