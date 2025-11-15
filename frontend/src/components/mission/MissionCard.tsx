@@ -68,8 +68,8 @@ const MissionCard = ({ mission, onRegister }: MissionCardProps) => {
           )}
 
           {canAccess && (
-            <Link to={`/mission/${mission.id}/board`} className="mission-btn mission-btn-primary">
-              Access Mission
+            <Link to={`/mission/${mission.id}`} className="mission-btn mission-btn-primary">
+              See Mission Details
             </Link>
           )}
 

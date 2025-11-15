@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
-import Layout from '../components/layout/Layout'
 import Timer from '../components/mission/Timer'
 import { Mission } from '../types'
 import { getMissionById } from '../utils/mockData'
@@ -43,124 +42,229 @@ const MissionDetail = () => {
     })
   }
 
-  if (loading) {
+  if (loading || !mission) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-2xl text-white">Loading mission...</div>
+      <div className="landing-page">
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-xl" style={{ color: '#5a7fa3' }}>Loading mission...</div>
         </div>
-      </Layout>
-    )
-  }
-
-  if (!mission) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="text-2xl text-white mb-4">Mission not found</div>
-            <Link to="/missions" className="btn-primary">
-              Back to Missions
-            </Link>
-          </div>
-        </div>
-      </Layout>
+      </div>
     )
   }
 
   const canAccess = mission.status === 'active' && isRegistered
 
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Back button */}
-          <Link to="/missions" className="text-gray-400 hover:text-white mb-6 inline-block">
-            ← Back to Missions
-          </Link>
+    <div className="landing-page">
+      {/* Back button - top left */}
+      <Link
+        to="/missions"
+        className="fixed top-8 left-8 z-50"
+        style={{
+          color: '#5a7fa3',
+          fontSize: '0.9rem',
+          textDecoration: 'none',
+          fontFamily: 'Courier Prime, monospace'
+        }}
+      >
+        ← Back to Missions
+      </Link>
 
-          {/* Mission Header */}
-          <div className="card mb-8">
-            <div className="flex justify-between items-start mb-6">
-              <h1 className="text-4xl font-bold text-white">{mission.title}</h1>
-              <span className={`px-4 py-2 border text-sm font-semibold ${
-                mission.status === 'active' ? 'bg-green-900/30 border-green-700 text-green-400' :
-                mission.status === 'upcoming' ? 'bg-blue-900/30 border-blue-700 text-blue-400' :
-                'bg-gray-800 border-gray-700 text-gray-400'
-              }`}>
-                {mission.status.toUpperCase()}
-              </span>
+      {/* Central mission detail window */}
+      <div className="landing-window landing-window-center" style={{ maxWidth: '800px' }}>
+        <div className="node-header">
+          <button className="node-close-button" onClick={() => navigate('/missions')}>×</button>
+          <div className="node-title">MISSION BRIEFING</div>
+        </div>
+
+        <div className="node-content" style={{ padding: '2.5rem 2rem' }}>
+          {/* Mission Status Badge */}
+          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h1 style={{ 
+              fontSize: '2.5rem', 
+              color: '#fff', 
+              fontWeight: 'bold',
+              margin: 0,
+              fontFamily: 'VT323, monospace'
+            }}>
+              {mission.title}
+            </h1>
+            <span style={{
+              padding: '0.5rem 1rem',
+              border: mission.status === 'active' ? '2px solid #00ff41' : 
+                      mission.status === 'upcoming' ? '2px solid #5a7fa3' : 
+                      '2px solid #808080',
+              color: mission.status === 'active' ? '#00ff41' : 
+                     mission.status === 'upcoming' ? '#5a7fa3' : 
+                     '#808080',
+              fontSize: '0.75rem',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              fontFamily: 'Courier Prime, monospace',
+              letterSpacing: '0.1em'
+            }}>
+              {mission.status}
+            </span>
+          </div>
+
+          {/* Description */}
+          <p style={{ 
+            color: '#b0b0b0', 
+            fontSize: '1.1rem', 
+            lineHeight: '1.8',
+            marginBottom: '2rem'
+          }}>
+            {mission.description}
+          </p>
+
+          {/* Main Question */}
+          {mission.mainQuestion && (
+            <div style={{
+              background: 'rgba(90, 127, 163, 0.1)',
+              border: '1px solid #5a7fa3',
+              padding: '1.5rem',
+              marginBottom: '2rem'
+            }}>
+              <div style={{ 
+                fontSize: '0.75rem', 
+                color: '#5a7fa3', 
+                marginBottom: '0.5rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em'
+              }}>
+                Investigation Question:
+              </div>
+              <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 'bold' }}>
+                {mission.mainQuestion}
+              </div>
             </div>
+          )}
 
-            <p className="text-gray-300 text-lg mb-6">{mission.description}</p>
-
-            {mission.mainQuestion && (
-              <div className="bg-dark-800 border border-main-color p-4 mb-6">
-                <div className="text-sm text-gray-400 mb-2">Main Question:</div>
-                <div className="text-white font-semibold">{mission.mainQuestion}</div>
+          {/* Mission Timeline */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr', 
+            gap: '1.5rem',
+            marginBottom: '2rem'
+          }}>
+            <div>
+              <div style={{ 
+                fontSize: '0.7rem', 
+                color: '#808080', 
+                marginBottom: '0.5rem',
+                textTransform: 'uppercase'
+              }}>
+                Start Time
               </div>
-            )}
-
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <div className="text-sm text-gray-400 mb-1">Start Time</div>
-                <div className="text-white">{new Date(mission.startTime).toLocaleString('en-GB').replace(/\//g, '-')}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-400 mb-1">End Time</div>
-                <div className="text-white">{new Date(mission.endTime).toLocaleString('en-GB').replace(/\//g, '-')}</div>
+              <div style={{ color: '#fff', fontFamily: 'Courier Prime, monospace' }}>
+                {new Date(mission.startTime).toLocaleString('en-GB').replace(/\//g, '-')}
               </div>
             </div>
-
-            {/* Timer */}
-            {mission.status === 'active' && (
-              <div className="mb-6">
-                <Timer targetDate={mission.endTime} label="Time Remaining" />
+            <div>
+              <div style={{ 
+                fontSize: '0.7rem', 
+                color: '#808080', 
+                marginBottom: '0.5rem',
+                textTransform: 'uppercase'
+              }}>
+                End Time
               </div>
-            )}
-
-            {mission.status === 'upcoming' && (
-              <div className="mb-6">
-                <Timer targetDate={mission.startTime} label="Starts In" />
+              <div style={{ color: '#fff', fontFamily: 'Courier Prime, monospace' }}>
+                {new Date(mission.endTime).toLocaleString('en-GB').replace(/\//g, '-')}
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* Actions */}
-            <div className="flex gap-4">
-              {mission.status === 'upcoming' && !isRegistered && (
-                <button onClick={handleRegister} className="btn-primary">
+          {/* Timer */}
+          {mission.status === 'active' && (
+            <div style={{ marginBottom: '2rem' }}>
+              <Timer targetDate={mission.endTime} label="Time Remaining" />
+            </div>
+          )}
+
+          {mission.status === 'upcoming' && (
+            <div style={{ marginBottom: '2rem' }}>
+              <Timer targetDate={mission.startTime} label="Starts In" />
+            </div>
+          )}
+
+          {/* Actions */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* UPCOMING - Not registered */}
+            {mission.status === 'upcoming' && !isRegistered && (
+              <>
+                <button onClick={handleRegister} className="btn-primary" style={{ width: '100%' }}>
                   Register for Mission
                 </button>
-              )}
+                <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#808080' }}>
+                  Register now to access when mission starts
+                </div>
+              </>
+            )}
 
-              {mission.status === 'upcoming' && isRegistered && (
-                <span className="px-4 py-2 bg-green-900/30 border border-green-700 text-green-400 font-semibold">
-                  ✓ Registered - Mission will unlock when it starts
-                </span>
-              )}
+            {/* UPCOMING - Registered */}
+            {mission.status === 'upcoming' && isRegistered && (
+              <div style={{
+                padding: '1rem',
+                background: 'rgba(0, 255, 65, 0.1)',
+                border: '1px solid #00ff41',
+                textAlign: 'center',
+                color: '#00ff41'
+              }}>
+                ✓ Registered - Mission will unlock when it starts
+              </div>
+            )}
 
-              {canAccess && (
-                <Link to={`/mission/${id}/board`} className="btn-primary">
-                  Access Investigation Board
+            {/* ACTIVE - Can access */}
+            {canAccess && (
+              <>
+                <Link 
+                  to={`/mission/${id}/board`} 
+                  className="btn-primary" 
+                  style={{ 
+                    width: '100%',
+                    textDecoration: 'none',
+                    display: 'block',
+                    textAlign: 'center'
+                  }}
+                >
+                  🔍 Enter the Mission Board
                 </Link>
-              )}
+                <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#808080' }}>
+                  Access the investigation board to analyze evidence
+                </div>
+              </>
+            )}
 
-              {mission.status === 'active' && !isRegistered && (
-                <span className="px-4 py-2 bg-red-900/30 border border-red-700 text-red-400">
-                  You must have registered before the mission started to access it
-                </span>
-              )}
+            {/* ACTIVE - Not registered */}
+            {mission.status === 'active' && !isRegistered && (
+              <div style={{
+                padding: '1rem',
+                background: 'rgba(255, 0, 64, 0.1)',
+                border: '1px solid #ff0040',
+                textAlign: 'center',
+                color: '#ff0040'
+              }}>
+                Access Denied - You must have registered before the mission started
+              </div>
+            )}
 
-              {mission.status === 'ended' && (
-                <span className="px-4 py-2 bg-gray-800 border border-gray-700 text-gray-400">
-                  Mission Ended
-                </span>
-              )}
-            </div>
+            {/* ENDED */}
+            {mission.status === 'ended' && (
+              <div style={{
+                padding: '1rem',
+                background: 'rgba(128, 128, 128, 0.1)',
+                border: '1px solid #808080',
+                textAlign: 'center',
+                color: '#808080'
+              }}>
+                Mission Ended - Results Available Soon
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </Layout>
+    </div>
   )
 }
 
