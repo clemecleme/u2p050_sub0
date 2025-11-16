@@ -13,7 +13,6 @@ import {
   EdgeTypes,
   Connection,
   ReactFlowInstance,
-  useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useApp } from '../contexts/AppContext'
@@ -22,14 +21,15 @@ import DocumentOverlay from '../components/board/DocumentOverlay'
 import AnswerSubmission from '../components/board/AnswerSubmission'
 import SagEdge from '../components/board/SagEdge'
 import SagConnectionLine from '../components/board/SagConnectionLine'
-import { Document, DocumentNode as DocumentNodeType } from '../types'
-import { getMissionById, getDocumentsForMission } from '../utils/mockData'
+import { DocumentNode as DocumentNodeType } from '../types'
+import { getFullConspiracy } from '../services/arkiv'
 
 const nodeTypes: NodeTypes = {
   email: DocumentNode,
   diary: DocumentNode,
   police_report: DocumentNode,
   badge: DocumentNode,
+  badge_log: DocumentNode,
   witness_statement: DocumentNode,
   bank_statement: DocumentNode,
   newspaper: DocumentNode,
@@ -41,6 +41,18 @@ const nodeTypes: NodeTypes = {
   article: DocumentNode,
   terminal: DocumentNode,
   image: DocumentNode,
+  // New Arkiv document types
+  login_history: DocumentNode,
+  server_log: DocumentNode,
+  firewall_log: DocumentNode,
+  network_log: DocumentNode,
+  access_control: DocumentNode,
+  vpn_log: DocumentNode,
+  door_access_log: DocumentNode,
+  it_inventory: DocumentNode,
+  security_scan: DocumentNode,
+  device_registry: DocumentNode,
+  asset_database: DocumentNode,
 }
 
 const edgeTypes: EdgeTypes = {
@@ -56,67 +68,100 @@ const BoardPage = () => {
   
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
-  const [documents, setDocuments] = useState<Document[]>([])
-  const [mission, setMission] = useState<any>(null)
+  const [conspiracy, setConspiracy] = useState<any>(null)
   const [selectedDocument, setSelectedDocument] = useState<DocumentNodeType | null>(null)
   const [accessDenied, setAccessDenied] = useState(false)
   const [showSubmissionOverlay, setShowSubmissionOverlay] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user || !id) {
+    if (!id) {
       navigate('/')
       return
     }
 
-    // Load mission and check access
-    const missionData = getMissionById(id)
-    if (!missionData) {
-      navigate('/missions')
-      return
-    }
+    const loadConspiracy = async () => {
+      try {
+        setLoading(true)
+        setError(null)
 
-    // Check if mission is active and user is not registered
-    const isActive = missionData.status === 'active'
-    const isRegistered = user.registeredMissions?.includes(id)
-    
-    // Check simulated registration from localStorage
-    const simulatedRegistration = localStorage.getItem(`simulated-registration-${id}`) === 'true'
-    
-    if (isActive && !isRegistered && !simulatedRegistration) {
-      setAccessDenied(true)
-      return
-    }
+        // Load conspiracy data from Arkiv
+        const data = await getFullConspiracy(id)
+        
+        if (!data.metadata) {
+          navigate('/conspiracies')
+          return
+        }
 
-    setMission(missionData)
+        // TODO: Re-enable access control later
+        // For now, allow access without registration for development/testing
 
-    // Load documents
-    const docs = getDocumentsForMission(id)
-    setDocuments(docs)
+        setConspiracy(data.metadata)
 
-    // Automatically place all documents on the board with random positions
-    const initialNodes: Node[] = docs.map((doc, index) => {
-      // Create a grid-like layout with some randomness
-      const gridSize = Math.ceil(Math.sqrt(docs.length))
-      const row = Math.floor(index / gridSize)
-      const col = index % gridSize
-      
-      // Add randomness to positions
-      const baseX = col * 400 + Math.random() * 100
-      const baseY = row * 300 + Math.random() * 100
-      
-      return {
-        id: `node-${doc.id}`,
-        type: doc.type,
-        position: { x: baseX, y: baseY },
-        data: {
-          title: doc.name,
-          content: doc.content,
-        },
+        // Create nodes from documents
+        const documentNodes: Node[] = data.documents.map((doc, index) => {
+          // Create a grid-like layout with better spacing
+          const gridSize = Math.ceil(Math.sqrt(data.documents.length + data.images.length))
+          const row = Math.floor(index / gridSize)
+          const col = index % gridSize
+          
+          // More organic distribution with increased randomness
+          const baseX = col * 700 + (Math.random() - 0.5) * 300
+          const baseY = row * 600 + (Math.random() - 0.5) * 250
+          
+          return {
+            id: `node-${doc.document_id}`,
+            type: doc.document_type,
+            position: { x: baseX, y: baseY },
+            data: {
+              title: doc.document_id,
+              content: doc.fields,
+            },
+          }
+        })
+
+        // Create nodes from images
+        const imageNodes: Node[] = data.images.map((img, index) => {
+          const totalDocs = data.documents.length
+          const gridSize = Math.ceil(Math.sqrt(data.documents.length + data.images.length))
+          const absoluteIndex = totalDocs + index
+          const row = Math.floor(absoluteIndex / gridSize)
+          const col = absoluteIndex % gridSize
+          
+          // More organic distribution with increased randomness
+          const baseX = col * 700 + (Math.random() - 0.5) * 300
+          const baseY = row * 600 + (Math.random() - 0.5) * 250
+          
+          // Convert image bytes to blob URL
+          const blob = new Blob([img.imageData], { type: 'image/png' })
+          const imageUrl = URL.createObjectURL(blob)
+          
+          return {
+            id: `node-image-${img.image_id}`,
+            type: 'image',
+            position: { x: baseX, y: baseY },
+            data: {
+              title: img.image_id,
+              content: {
+                imageUrl,
+                caption: `Image: ${img.image_id}`,
+              },
+            },
+          }
+        })
+
+        setNodes([...documentNodes, ...imageNodes])
+        setLoading(false)
+      } catch (err) {
+        console.error('Error loading conspiracy from Arkiv:', err)
+        setError('Failed to load conspiracy data from Arkiv')
+        setLoading(false)
       }
-    })
+    }
 
-    setNodes(initialNodes)
-  }, [id, user, navigate, setNodes])
+    loadConspiracy()
+  }, [id, navigate, setNodes])
 
   // Handle node double click to open overlay
   const onNodeDoubleClick = useCallback((_event: React.MouseEvent, node: Node) => {
@@ -160,20 +205,41 @@ const BoardPage = () => {
           <div className="text-6xl mb-6">🔒</div>
           <h1 className="text-2xl font-bold text-white mb-4">Access Denied</h1>
           <p className="text-gray-400 mb-6">
-            You must register for this mission before it starts to gain access.
+            You must register for this conspiracy before it starts to gain access.
           </p>
-          <button onClick={() => navigate('/missions')} className="btn-primary">
-            Back to Missions
+          <button onClick={() => navigate('/conspiracies')} className="btn-primary">
+            Back to Conspiracies
           </button>
         </div>
       </div>
     )
   }
 
-  if (!mission) {
+  if (loading) {
     return (
       <div className="h-screen bg-dark-950 flex items-center justify-center">
-        <div className="text-2xl text-white">Loading...</div>
+        <div className="text-2xl text-white">Loading conspiracy from Arkiv...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen bg-dark-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl text-red-500 mb-4">{error}</div>
+          <button onClick={() => navigate('/conspiracies')} className="btn-primary">
+            Back to Conspiracies
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!conspiracy) {
+    return (
+      <div className="h-screen bg-dark-950 flex items-center justify-center">
+        <div className="text-2xl text-white">Conspiracy not found</div>
       </div>
     )
   }
@@ -183,10 +249,18 @@ const BoardPage = () => {
       {/* Board Header */}
       <div className="board-header">
         <div className="board-header-left">
-          <h1 className="board-title">{mission.title}</h1>
-          {mission.mainQuestion && (
-            <p className="board-question">{mission.mainQuestion}</p>
+          <h1 className="board-title">{conspiracy.conspiracy_name}</h1>
+          {conspiracy.premise && (
+            <p className="board-question">{conspiracy.premise}</p>
           )}
+          <div style={{ 
+            fontSize: '0.75rem', 
+            color: '#5a7fa3',
+            marginTop: '0.25rem',
+            fontFamily: 'Courier Prime, monospace'
+          }}>
+            🌍 {conspiracy.world} | Difficulty: {conspiracy.difficulty}/10 | Type: {conspiracy.conspiracy_type}
+          </div>
         </div>
 
         <button className="btn-primary" onClick={() => setShowSubmissionOverlay(true)}>

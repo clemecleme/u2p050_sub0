@@ -2388,17 +2388,7 @@ nav a.active {
 
 /* Connection handle for landing page windows */
 .landing-page .landing-window::before {
-  content: '';
-  position: absolute;
-  top: 11px; /* Centered in 32px header: (32 - 12) / 2 = 10px, +1 for adjustment */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 12px;
-  height: 12px;
-  background: var(--landing-blue-light);
-  border: 2px solid #000;
-  z-index: 11;
-  animation: handlePulse 2s ease-in-out infinite;
+  display: none; /* Removed decorative handle */
 }
 
 /* Override scanline for landing page - add connection handle */

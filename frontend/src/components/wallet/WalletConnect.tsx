@@ -48,11 +48,11 @@ const WalletConnect = () => {
       
       setUser({
         address,
-        registeredMissions: [],
+        registeredConspiracies: [],
       })
 
-      // Navigate to missions after connection
-      navigate('/missions')
+      // Navigate to conspiracies after connection
+      navigate('/conspiracies')
     } catch (err: any) {
       console.error('Error connecting wallet:', err)
       if (err.code === 4001) {
@@ -125,7 +125,7 @@ const WalletConnect = () => {
       )}
       
       <p className="text-gray-400 text-sm mt-4">
-        Connect your wallet to access missions
+        Optional: Connect wallet for future features
       </p>
     </div>
   )

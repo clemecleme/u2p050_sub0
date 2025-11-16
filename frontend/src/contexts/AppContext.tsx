@@ -1,19 +1,12 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react'
+import { Conspiracy } from '../types'
 
 // Types
 export interface User {
   address: string
-  registeredMissions: string[]
-}
-
-export interface Mission {
-  id: string
-  title: string
-  description: string
-  startTime: string
-  endTime: string
-  status: 'upcoming' | 'active' | 'ended'
-  registrationOpen: boolean
+  registeredConspiracies: string[]
+  // Legacy field for backward compatibility
+  registeredMissions?: string[]
 }
 
 export interface DocumentNode {
@@ -31,8 +24,11 @@ export interface DocumentNode {
 interface AppContextType {
   user: User | null
   setUser: (user: User | null) => void
-  currentMission: Mission | null
-  setCurrentMission: (mission: Mission | null) => void
+  currentConspiracy: Conspiracy | null
+  setCurrentConspiracy: (conspiracy: Conspiracy | null) => void
+  // Legacy for backward compatibility
+  currentMission: Conspiracy | null
+  setCurrentMission: (conspiracy: Conspiracy | null) => void
   nodes: DocumentNode[]
   setNodes: (nodes: DocumentNode[]) => void
   selectedDocument: DocumentNode | null
@@ -43,7 +39,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
-  const [currentMission, setCurrentMission] = useState<Mission | null>(null)
+  const [currentConspiracy, setCurrentConspiracy] = useState<Conspiracy | null>(null)
   const [nodes, setNodes] = useState<DocumentNode[]>([])
   const [selectedDocument, setSelectedDocument] = useState<DocumentNode | null>(null)
 
@@ -52,8 +48,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       value={{
         user,
         setUser,
-        currentMission,
-        setCurrentMission,
+        currentConspiracy,
+        setCurrentConspiracy,
+        // Legacy aliases
+        currentMission: currentConspiracy,
+        setCurrentMission: setCurrentConspiracy,
         nodes,
         setNodes,
         selectedDocument,
@@ -72,4 +71,3 @@ export const useApp = () => {
   }
   return context
 }
-

@@ -1,5 +1,10 @@
 import { Mission, Document } from '../types'
 
+// ==========================================
+// DEPRECATED: Mock data for testing only
+// All data now comes from Arkiv blockchain
+// ==========================================
+
 // Mock missions data
 export const mockMissions: Mission[] = [
   {

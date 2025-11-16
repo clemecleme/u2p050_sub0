@@ -16,6 +16,7 @@
     "vite": "^7.2.2"
   },
   "dependencies": {
+    "@arkiv-network/sdk": "^0.4.5",
     "@xyflow/react": "^12.9.3",
     "axios": "^1.13.2",
     "ethers": "^6.15.0",

@@ -1,9 +1,6 @@
 import axios from 'axios'
 
-// Re-export from mockData for convenience
-export { getAllMissions, getMissionById, getDocumentsForMission } from '../utils/mockData'
-
-// API base URL (for future Arxiv integration)
+// API base URL (for future backend integration)
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 // Create axios instance
@@ -30,22 +27,23 @@ export const authenticateWallet = async (walletAddress: string) => {
     success: true,
     user: {
       address: walletAddress,
-      registeredMissions: [],
+      registeredConspiracies: [],
     },
   }
 }
 
-// Get mission board (returns empty - populated via drag & drop)
-export const getMissionBoard = async (missionId: string) => {
-  // TODO: Backend integration - GET /mission/:id/board
+// Get conspiracy board (returns empty - populated from Arkiv)
+export const getConspiracyBoard = async (conspiracyId: string) => {
+  // TODO: Backend integration - GET /conspiracy/:id/board
+  // Note: Board data now comes directly from Arkiv, this may be deprecated
   return []
 }
 
-// Submit answer (will be connected to Arxiv later)
-export const submitAnswer = async (missionId: string, answer: string) => {
-  // TODO: Backend integration - POST /mission/:id/answer
-  // Will send encrypted answer to Arxiv smart contract
-  // const response = await apiClient.post(`/missions/${missionId}/answer`, { answer })
+// Submit answer (will be connected to blockchain later)
+export const submitAnswer = async (conspiracyId: string, answer: string) => {
+  // TODO: Backend integration - POST /conspiracy/:id/answer
+  // Will send encrypted answer to blockchain smart contract
+  // const response = await apiClient.post(`/conspiracies/${conspiracyId}/answer`, { answer })
   
   return {
     success: true,
